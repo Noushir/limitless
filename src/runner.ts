@@ -54,6 +54,7 @@ export async function runLoop(mode: RunMode, deps: RunnerDeps): Promise<RunState
 
     if (verdict.verdict === "done") {
       state.status = "done";
+      state.nextWakeAt = null;
       persist();
       await emit("finished", "✅ Task finished.");
       return state;
@@ -62,6 +63,7 @@ export async function runLoop(mode: RunMode, deps: RunnerDeps): Promise<RunState
     if (verdict.verdict === "rate_limited") {
       if (verdict.limitWindow === "seven_day" && config.guards.weeklyLimitBehavior === "stop") {
         state.status = "stopped";
+        state.nextWakeAt = null;
         persist();
         await emit("weekly_stopped", "⏳ Weekly limit reached — stopping (set weeklyLimitBehavior=wait to wait it out).");
         return state;
@@ -69,6 +71,7 @@ export async function runLoop(mode: RunMode, deps: RunnerDeps): Promise<RunState
       state.cycle += 1;
       if (state.cycle >= config.guards.maxCycles || clock.now() - startedAt > maxWallSeconds) {
         state.status = "failed";
+        state.nextWakeAt = null;
         persist();
         await emit("failed", `❌ Hit guard limit after ${state.cycle} cycles.`);
         return state;
@@ -96,6 +99,7 @@ export async function runLoop(mode: RunMode, deps: RunnerDeps): Promise<RunState
     errorRetries += 1;
     if (errorRetries > ERROR_RETRY_LIMIT) {
       state.status = "failed";
+      state.nextWakeAt = null;
       persist();
       await emit("failed", `❌ Failed: ${verdict.reason}`);
       return state;

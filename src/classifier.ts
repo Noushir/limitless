@@ -38,30 +38,52 @@ function detectWindow(text: string): LimitWindow {
   return "unknown";
 }
 
+function readBool(json: unknown, key: string): boolean | undefined {
+  const o = asRecord(json);
+  const v = o?.[key];
+  return typeof v === "boolean" ? v : undefined;
+}
+
+function readString(json: unknown, key: string): string | undefined {
+  const o = asRecord(json);
+  const v = o?.[key];
+  return typeof v === "string" ? v : undefined;
+}
+
 export function classify(result: ClaudeResult): ClassifyResult {
-  const text = `${result.stdout}\n${result.stderr}`;
   const sessionId = readSessionId(result.json);
+  const isError = readBool(result.json, "is_error");
+  const subtype = readString(result.json, "subtype");
+
+  // A clean JSON result (is_error false / subtype "success") is DONE regardless of
+  // limit-related words in the model's answer text. --output-format json puts that
+  // answer in `result` on stdout, so we must NOT text-scan stdout — only stderr.
+  const jsonSuccess = isError === false || subtype === "success";
+
   const rateLimited =
-    looksRateLimitedJson(result.json) ||
-    GENERIC_LIMIT_RE.test(text) ||
-    WEEKLY_RE.test(text) ||
-    FIVE_HOUR_RE.test(text);
+    !jsonSuccess &&
+    (looksRateLimitedJson(result.json) ||
+      GENERIC_LIMIT_RE.test(result.stderr) ||
+      WEEKLY_RE.test(result.stderr) ||
+      FIVE_HOUR_RE.test(result.stderr));
 
   if (rateLimited) {
     return {
       verdict: "rate_limited",
       reason: "usage limit detected",
       resetsAt: readResetsAt(result.json),
-      limitWindow: detectWindow(text),
+      limitWindow: detectWindow(result.stderr),
       sessionId,
     };
+  }
+  if (jsonSuccess) {
+    return { verdict: "done", reason: "clean exit", sessionId };
+  }
+  if (isError === true) {
+    return { verdict: "error", reason: subtype ?? "claude reported is_error", sessionId };
   }
   if (result.exitCode === 0) {
     return { verdict: "done", reason: "clean exit", sessionId };
   }
-  return {
-    verdict: "error",
-    reason: `non-zero exit (${result.exitCode})`,
-    sessionId,
-  };
+  return { verdict: "error", reason: `non-zero exit (${result.exitCode})`, sessionId };
 }

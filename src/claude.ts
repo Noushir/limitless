@@ -36,6 +36,7 @@ export const spawnClaude: ClaudeRunner = {
     const fullArgs = [...(opts.prefixArgs ?? []), ...args];
     return new Promise((resolve) => {
       const child = spawn(command, fullArgs, { cwd });
+      child.stdin?.end();
       let stdout = "";
       let stderr = "";
       child.stdout.on("data", (d) => (stdout += d.toString()));

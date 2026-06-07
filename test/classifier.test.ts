@@ -49,4 +49,34 @@ describe("classify", () => {
     const r = classify({ ...base, exitCode: 0, json: { session_id: "s-9" } });
     expect(r.sessionId).toBe("s-9");
   });
+
+  it("treats a clean JSON success as done even when the result text mentions limits", () => {
+    const r = classify({
+      exitCode: 0,
+      stdout: '{"session_id":"s-3","is_error":false,"subtype":"success","result":"Refactored the rate limit handler; usage limit logic now resets at midnight."}',
+      stderr: "",
+      json: { session_id: "s-3", is_error: false, subtype: "success", result: "Refactored the rate limit handler; usage limit logic now resets at midnight." },
+    });
+    expect(r.verdict).toBe("done");
+    expect(r.sessionId).toBe("s-3");
+  });
+
+  it("does not text-scan stdout for limit phrases (only stderr)", () => {
+    const r = classify({
+      exitCode: 0,
+      stdout: "The usage limit was reached yesterday; it resets at noon.",
+      stderr: "",
+    });
+    expect(r.verdict).toBe("done");
+  });
+
+  it("classifies an explicit json error (is_error true, not a limit) as error", () => {
+    const r = classify({
+      exitCode: 0,
+      stdout: '{"session_id":"s-4","is_error":true,"subtype":"error_max_turns"}',
+      stderr: "",
+      json: { session_id: "s-4", is_error: true, subtype: "error_max_turns" },
+    });
+    expect(r.verdict).toBe("error");
+  });
 });
