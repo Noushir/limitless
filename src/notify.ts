@@ -13,11 +13,14 @@ export interface Notifier {
   send(title: string, message: string): Promise<void>;
 }
 
+export function escapeAppleScript(s: string): string {
+  return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
 export const macNotifier: Notifier = {
   send: (title, message) =>
     new Promise((resolve) => {
-      const safe = (s: string) => s.replace(/"/g, '\\"');
-      const script = `display notification "${safe(message)}" with title "${safe(title)}" sound name "Glass"`;
+      const script = `display notification "${escapeAppleScript(message)}" with title "${escapeAppleScript(title)}" sound name "Glass"`;
       const child = spawn("osascript", ["-e", script], { stdio: "ignore" });
       child.on("error", () => resolve());
       child.on("close", () => resolve());

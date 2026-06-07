@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { notify, formatWebhook } from "../src/notify.js";
+import { notify, formatWebhook, escapeAppleScript } from "../src/notify.js";
 import { DEFAULT_CONFIG } from "../src/config.js";
 import type { Config } from "../src/types.js";
 
@@ -22,6 +22,12 @@ describe("notify", () => {
       fetchFn: fetchFn as unknown as typeof fetch,
     });
     expect(fetchFn).toHaveBeenCalledWith("https://ntfy.sh/x", expect.objectContaining({ method: "POST" }));
+  });
+});
+
+describe("escapeAppleScript", () => {
+  it("escapes backslashes before quotes", () => {
+    expect(escapeAppleScript('path C:\\foo "bar"')).toBe('path C:\\\\foo \\"bar\\"');
   });
 });
 
