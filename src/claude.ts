@@ -10,11 +10,24 @@ export interface ClaudeRunner {
   run(args: string[], cwd: string, opts?: RunOptions): Promise<ClaudeResult>;
 }
 
-// Parse the last JSON object found in stdout (claude --output-format json prints a trailing object).
+// Parse claude's JSON output. Real `claude --output-format json` prints a single
+// (possibly nested) object, so try the whole trimmed output first; fall back to
+// scanning for a trailing object when the stream is prefixed with other text.
 function parseTrailingJson(stdout: string): unknown {
+  const trimmed = stdout.trim();
+  try {
+    const v = JSON.parse(trimmed);
+    if (v && typeof v === "object") return v;
+  } catch {
+    // not a clean single object — fall through to the trailing-object scan
+  }
   const start = stdout.lastIndexOf("{");
   if (start === -1) return undefined;
-  try { return JSON.parse(stdout.slice(start)); } catch { return undefined; }
+  try {
+    return JSON.parse(stdout.slice(start));
+  } catch {
+    return undefined;
+  }
 }
 
 export const spawnClaude: ClaudeRunner = {

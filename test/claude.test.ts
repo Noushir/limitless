@@ -27,4 +27,14 @@ describe("spawnClaude", () => {
     expect(result.stdout).toContain("session_id");
     expect((result.json as { session_id: string }).session_id).toBe("s-1");
   });
+
+  it("parses a nested json object (realistic claude output)", async () => {
+    process.env.MOCK_CLAUDE_COUNTER = counter;
+    process.env.MOCK_CLAUDE_SCENARIO = scenario([
+      { stdout: '{"session_id":"s-2","result":"ok","usage":{"input_tokens":5}}', exit: 0 },
+    ]);
+    const result = await spawnClaude.run([], process.cwd(), { command: "node", prefixArgs: [fixture] });
+    expect((result.json as { session_id: string }).session_id).toBe("s-2");
+    expect((result.json as { usage: { input_tokens: number } }).usage.input_tokens).toBe(5);
+  });
 });
