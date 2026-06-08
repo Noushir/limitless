@@ -19,7 +19,7 @@ export interface PtyHost {
 export function createPtyHost(command: string, args: string[], opts: PtyHostOptions = {}): PtyHost {
   const dataCbs: ((c: string) => void)[] = [];
   const exitCbs: ((code: number) => void)[] = [];
-  const baseArgs = args;
+  const baseArgs = [...args];
   let term: pty.IPty;
 
   const spawn = (spawnArgs: string[]) => {
@@ -39,7 +39,7 @@ export function createPtyHost(command: string, args: string[], opts: PtyHostOpti
   return {
     onData(cb) { dataCbs.push(cb); },
     onExit(cb) { exitCbs.push(cb); },
-    write(data) { term.write(data); },
+    write(data) { try { term.write(data); } catch {} },
     resize(cols, rows) { try { term.resize(cols, rows); } catch {} },
     relaunch(extraArgs) { try { term.kill(); } catch {} spawn([...baseArgs, ...extraArgs]); },
     kill() { try { term.kill(); } catch {} },

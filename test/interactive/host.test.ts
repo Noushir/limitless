@@ -23,4 +23,12 @@ describe("PtyHost", () => {
       host.write("quit\r");
     });
   });
+
+  it("does not throw when writing after the child has exited", async () => {
+    const host = createPtyHost("node", [stub], { cols: 80, rows: 24 });
+    await new Promise((r) => setTimeout(r, 300));
+    host.kill();
+    await new Promise((r) => setTimeout(r, 300));
+    expect(() => host.write("late\r")).not.toThrow();
+  });
 });
