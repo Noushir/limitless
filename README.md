@@ -137,7 +137,7 @@ limitless config        # Print the resolved config as JSON
 `limitless status` output format per entry:
 
 ```
-<id>  <status>  <mode>  cycle=<n>    (resumes HH:MM:SS)
+<id>  <status> (resumes HH:MM:SS)  <mode>  cycle=<n>
 ```
 
 ---
