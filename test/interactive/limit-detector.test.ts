@@ -30,4 +30,16 @@ describe("limit detector", () => {
     d.reset();
     expect(d.push("normal output")).toBe(false);
   });
+
+  it("does NOT fire on model output that merely mentions limits/resets", () => {
+    const d = createLimitDetector();
+    expect(d.push("The counter resets at midnight via cron.\n")).toBe(false);
+    expect(d.push("Rate limit: 100 requests/min in the config.\n")).toBe(false);
+    expect(d.push("I refactored the usage limit handler; the value resets in 5s.\n")).toBe(false);
+  });
+
+  it("fires on the real weekly banner", () => {
+    const d = createLimitDetector();
+    expect(d.push("You've hit your weekly limit · resets Mon 12:00am")).toBe(true);
+  });
 });
