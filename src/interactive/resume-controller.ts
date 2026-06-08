@@ -65,11 +65,14 @@ export class ResumeController {
       detector.reset();
 
       if (!presence.isIdle(idle, clock.now())) {
-        await notify({ type: "resumed", message: "Window reopened — press Enter to continue." }, config, { notifier });
+        await notify({ type: "sleeping", message: "Window reopened — press Enter to continue." }, config, { notifier });
         await this.waitForUser();
       }
       effects.write("continue\r");
 
+      // NOTE (spike): if the real PTY raw-echoes the injected "continue", that echo could
+      // set `progressed` before Claude actually responds. Self-corrects — a still-blocked
+      // session re-emits the banner and re-triggers runResume. Confirm against a real limit.
       await clock.sleep(verify);
       if (this.progressed) {
         await notify({ type: "resumed", message: "Resumed." }, config, { notifier });

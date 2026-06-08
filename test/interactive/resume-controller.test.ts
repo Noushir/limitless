@@ -53,4 +53,23 @@ describe("ResumeController", () => {
     expect(relaunches).toEqual([["--continue"]]);
     expect(controller.getState()).toBe("pass_through");
   });
+
+  it("when present, holds for the user's Enter before injecting", async () => {
+    const { controller, writes } = makeController({ idle: false });
+    controller.onOutput("You've hit your usage limit · resets 3pm"); // block
+    await settle();
+    await settle();
+    // It is holding for the user — nothing injected yet.
+    expect(writes).not.toContain("continue\r");
+    expect(controller.getState()).toBe("resuming");
+
+    controller.onInput("\r"); // user presses Enter
+    controller.onOutput("continuing the task...\n"); // progress after inject
+    await settle();
+    await settle();
+    await settle(); // allow verify-sleep and state transition to complete
+
+    expect(writes).toContain("continue\r");
+    expect(controller.getState()).toBe("pass_through");
+  });
 });
