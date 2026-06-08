@@ -1,5 +1,11 @@
 # limitless
 
+[![CI](https://github.com/Noushir/limitless/actions/workflows/ci.yml/badge.svg)](https://github.com/Noushir/limitless/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/claude-limitless)](https://www.npmjs.com/package/claude-limitless)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
+> Package: **`claude-limitless`** · command: **`limitless`** · License: MIT
+
 `limitless` wraps the real Claude TUI and keeps your session going across usage-limit
 windows. Run it instead of `claude` and when you hit the limit it waits out the reset
 window and continues your same live session in place — presence-aware (auto-continues if
