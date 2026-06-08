@@ -1,0 +1,52 @@
+import os from "node:os";
+import { loadConfig } from "../config.js";
+import { systemClock } from "../scheduler.js";
+import { macNotifier } from "../notify.js";
+import { createPtyHost } from "./host.js";
+import { createPresenceTracker } from "./presence.js";
+import { createLimitDetector } from "./limit-detector.js";
+import { ResumeController } from "./resume-controller.js";
+import { wireSession } from "./session.js";
+import { buildInteractiveArgs } from "./args.js";
+import type { InteractivePermission } from "../types.js";
+
+export interface RunInteractiveOptions {
+  adopt: boolean;
+  posture?: InteractivePermission;
+  passthrough?: string[];
+}
+
+export function runInteractive(opts: RunInteractiveOptions): void {
+  const config = loadConfig();
+  const posture = opts.posture ?? config.interactive.permissions;
+  const args = buildInteractiveArgs({ adopt: opts.adopt, posture, passthrough: opts.passthrough });
+
+  const cols = process.stdout.columns ?? 80;
+  const rows = process.stdout.rows ?? 24;
+  const host = createPtyHost("claude", args, { cols, rows, cwd: process.cwd(), env: process.env as Record<string, string> });
+
+  const controller = new ResumeController({
+    detector: createLimitDetector(),
+    presence: createPresenceTracker(),
+    clock: systemClock,
+    config,
+    notifier: macNotifier,
+    effects: { write: (d) => host.write(d), relaunch: (a) => host.relaunch(a) },
+  });
+
+  const sendInput = wireSession({ host, stdout: process.stdout, controller });
+
+  if (process.stdin.isTTY) process.stdin.setRawMode(true);
+  process.stdin.resume();
+  process.stdin.setEncoding("utf8");
+  process.stdin.on("data", (d: string) => sendInput(d));
+
+  const onResize = () => host.resize(process.stdout.columns ?? 80, process.stdout.rows ?? 24);
+  process.stdout.on("resize", onResize);
+
+  host.onExit((code) => {
+    if (process.stdin.isTTY) try { process.stdin.setRawMode(false); } catch {}
+    process.stdout.off("resize", onResize);
+    process.exit(code ?? 0);
+  });
+}

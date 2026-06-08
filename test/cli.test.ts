@@ -2,27 +2,29 @@ import { describe, it, expect } from "vitest";
 import { parseArgs } from "../src/cli.js";
 
 describe("parseArgs", () => {
-  it("parses a goal run", () => {
-    const r = parseArgs(["--goal", "tests pass"]);
-    expect(r).toMatchObject({ command: "run", mode: { kind: "goal", condition: "tests pass" } });
+  it("bare invocation -> interactive (fresh)", () => {
+    expect(parseArgs([])).toMatchObject({ command: "interactive", adopt: false });
   });
-
-  it("parses a plain task from the positional arg", () => {
-    const r = parseArgs(["refactor the auth module"]);
-    expect(r).toMatchObject({ command: "run", mode: { kind: "task", task: "refactor the auth module" } });
+  it("resume -> interactive adopt", () => {
+    expect(parseArgs(["resume"])).toMatchObject({ command: "interactive", adopt: true });
   });
-
-  it("parses --continue", () => {
-    const r = parseArgs(["--continue"]);
-    expect(r).toMatchObject({ command: "run", mode: { kind: "continue" } });
+  it("interactive posture flags", () => {
+    expect(parseArgs(["--safe"]).posture).toBe("safe");
+    expect(parseArgs(["--normal"]).posture).toBe("normal");
+    expect(parseArgs([]).posture).toBeUndefined();
   });
-
-  it("maps --yolo and --safe to a posture override", () => {
-    expect(parseArgs(["x", "--yolo"]).postureOverride).toBe("yolo");
-    expect(parseArgs(["x", "--safe"]).postureOverride).toBe("safe");
+  it("passthrough after --", () => {
+    expect(parseArgs(["--", "--model", "opus"]).passthrough).toEqual(["--model", "opus"]);
   });
-
-  it("parses the status subcommand", () => {
+  it("headless task", () => {
+    expect(parseArgs(["headless", "do x"])).toMatchObject({ command: "headless" });
+    expect(parseArgs(["headless", "do x"]).headless).toMatchObject({ mode: { kind: "task", task: "do x" } });
+  });
+  it("headless --goal", () => {
+    expect(parseArgs(["headless", "--goal", "tests pass"]).headless).toMatchObject({ mode: { kind: "goal", condition: "tests pass" } });
+  });
+  it("status / config subcommands", () => {
     expect(parseArgs(["status"]).command).toBe("status");
+    expect(parseArgs(["config"]).command).toBe("config");
   });
 });
