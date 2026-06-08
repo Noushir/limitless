@@ -28,14 +28,14 @@ describe("loadConfig", () => {
     expect(cfg.permissions.default).toBe("safe");
   });
 
-  it("defaults interactive.permissions to auto", () => {
-    expect(loadConfig(home).interactive.permissions).toBe("auto");
+  it("defaults interactive.permissions to safe", () => {
+    expect(loadConfig(home).interactive.permissions).toBe("safe");
   });
 
   it("lets a partial file override interactive.permissions", () => {
     fs.mkdirSync(limitlessDir(home), { recursive: true });
-    fs.writeFileSync(configPath(home), JSON.stringify({ interactive: { permissions: "safe" } }));
-    expect(loadConfig(home).interactive.permissions).toBe("safe");
+    fs.writeFileSync(configPath(home), JSON.stringify({ interactive: { permissions: "auto" } }));
+    expect(loadConfig(home).interactive.permissions).toBe("auto");
   });
 
   it("falls back to defaults on malformed config without throwing", () => {

@@ -21,10 +21,14 @@ export function runInteractive(opts: RunInteractiveOptions): void {
   const posture = opts.posture ?? config.interactive.permissions;
   const args = buildInteractiveArgs({ adopt: opts.adopt, posture, passthrough: opts.passthrough });
 
-  process.stderr.write(postureBanner(posture) + "\n");
   if (passthroughEscalates(posture, opts.passthrough)) {
-    process.stderr.write("limitless: warning — a permission flag in your passthrough overrides the chosen posture.\n");
+    process.stderr.write(
+      `limitless: refusing to launch — your passthrough contains a permission flag that overrides the '${posture}' posture. ` +
+        `Remove it, or run with --auto to choose full-auto explicitly.\n`,
+    );
+    process.exit(2);
   }
+  process.stderr.write(postureBanner(posture) + "\n");
 
   const cols = process.stdout.columns ?? 80;
   const rows = process.stdout.rows ?? 24;

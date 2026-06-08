@@ -72,17 +72,19 @@ wrapping it going forward.
 
 | Flag | Behavior |
 |------|----------|
-| _(none)_ | Uses `interactive.permissions` from config (default: `auto`) |
+| _(none)_ | Uses `interactive.permissions` from config (default: **`safe`**) |
+| `--safe` | Edits auto-approved; raw shell/network gated. Allowed tools: `Read,Edit,Write,Glob,Grep` |
 | `--auto` | Approve everything (`--dangerously-skip-permissions`) — **unattended shell/network** |
-| `--safe` | Edits auto-approved, no raw shell or network. Allowed tools: `Read,Edit,Write,Glob,Grep` |
 | `--normal` | Claude's normal interactive prompts — can stall unattended |
 
-**Default is `auto`.** This means limitless approves all tool calls, including shell
-execution and network requests, without prompting. This is intentional so an unattended
-continuation never stalls on a permission dialog while you're away. If you want a smaller
-blast radius, use `--safe` or set `interactive.permissions: "safe"` in config. If you want
-to approve each action yourself, use `--normal` (but note: an unattended resume may pause
-waiting for your input).
+**Default is `safe`** — edits are auto-approved, raw shell execution and network requests are gated. To opt into full-auto (all tool calls bypassed, including shell/network), pass `--auto` or set `interactive.permissions: "auto"` in config. If you want to approve each action yourself, use `--normal` (but note: an unattended resume may pause waiting for your input).
+
+**Passthrough permission flags are rejected under non-auto postures.** If you pass a permission flag (e.g. `--dangerously-skip-permissions`) via `-- …` while using `--safe` or `--normal`, limitless will refuse to launch with exit code 2. Use `--auto` explicitly instead:
+
+```bash
+limitless --auto -- --dangerously-skip-permissions   # wrong: redundant; just use --auto
+limitless --auto                                      # right: opt in to full-auto explicitly
+```
 
 ### Passing extra args to claude
 
@@ -155,7 +157,7 @@ defaults). Run-state files are stored in `~/.limitless/runs/<id>.json`.
     "default": "safe"           // headless default posture: "safe" | "yolo"
   },
   "interactive": {
-    "permissions": "auto"       // interactive default posture: "auto" | "safe" | "normal"
+    "permissions": "safe"       // interactive default posture: "safe" | "auto" | "normal"
   },
   "notify": {
     "local": true,              // macOS notification + Glass sound
