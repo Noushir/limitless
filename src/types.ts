@@ -5,6 +5,8 @@ export type RunMode =
 
 export type PermissionPosture = "safe" | "yolo";
 
+export type InteractivePermission = "auto" | "safe" | "normal";
+
 export type Verdict = "done" | "rate_limited" | "error" | "unknown";
 
 export type LimitWindow = "five_hour" | "seven_day" | "unknown";
@@ -30,6 +32,7 @@ export interface ClassifyResult {
 
 export interface Config {
   permissions: { default: PermissionPosture };
+  interactive: { permissions: InteractivePermission };
   notify: {
     local: boolean;
     webhook: { url: string | null; format: WebhookFormat };

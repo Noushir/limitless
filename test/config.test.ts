@@ -27,4 +27,14 @@ describe("loadConfig", () => {
     expect(cfg.guards.maxCycles).toBe(DEFAULT_CONFIG.guards.maxCycles);
     expect(cfg.permissions.default).toBe("safe");
   });
+
+  it("defaults interactive.permissions to auto", () => {
+    expect(loadConfig(home).interactive.permissions).toBe("auto");
+  });
+
+  it("lets a partial file override interactive.permissions", () => {
+    fs.mkdirSync(limitlessDir(home), { recursive: true });
+    fs.writeFileSync(configPath(home), JSON.stringify({ interactive: { permissions: "safe" } }));
+    expect(loadConfig(home).interactive.permissions).toBe("safe");
+  });
 });

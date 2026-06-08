@@ -4,6 +4,7 @@ import type { Config } from "./types.js";
 
 export const DEFAULT_CONFIG: Config = {
   permissions: { default: "safe" },
+  interactive: { permissions: "auto" },
   notify: { local: true, webhook: { url: null, format: "ntfy" } },
   guards: { maxCycles: 50, maxWallClockHours: 48, weeklyLimitBehavior: "stop" },
   pollRetry: { initialSeconds: 60, maxSeconds: 900, factor: 2 },
