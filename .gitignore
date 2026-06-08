@@ -7,3 +7,9 @@ coverage/
 .env
 .env.local
 .env.*.local
+
+# Claude Code / AI-assisted workflow artifacts (kept local, never shipped)
+.claude/
+.remember/
+CLAUDE.md
+docs/superpowers/
