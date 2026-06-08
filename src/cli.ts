@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
-import os from "node:os";
+import { realpathSync } from "node:fs";
 import { createRequire } from "node:module";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import os from "node:os";
 import { loadConfig } from "./config.js";
 import { listRunStates } from "./state.js";
 import { runLoop } from "./runner.js";
@@ -119,6 +121,17 @@ export async function main(argv: string[]): Promise<void> {
   runInteractive({ adopt: parsed.adopt ?? false, posture: parsed.posture, passthrough: parsed.passthrough });
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+export function isMainModule(metaUrl: string, argv1: string | undefined): boolean {
+  if (!argv1) return false;
+  try {
+    const resolvedMeta = pathToFileURL(realpathSync(fileURLToPath(metaUrl))).href;
+    const resolvedArgv1 = pathToFileURL(realpathSync(argv1)).href;
+    return resolvedMeta === resolvedArgv1;
+  } catch {
+    return false;
+  }
+}
+
+if (isMainModule(import.meta.url, process.argv[1])) {
   void main(process.argv.slice(2));
 }
