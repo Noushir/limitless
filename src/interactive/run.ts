@@ -7,7 +7,7 @@ import { createPresenceTracker } from "./presence.js";
 import { createLimitDetector } from "./limit-detector.js";
 import { ResumeController } from "./resume-controller.js";
 import { wireSession } from "./session.js";
-import { buildInteractiveArgs } from "./args.js";
+import { buildInteractiveArgs, postureBanner, passthroughEscalates } from "./args.js";
 import type { InteractivePermission } from "../types.js";
 
 export interface RunInteractiveOptions {
@@ -20,6 +20,11 @@ export function runInteractive(opts: RunInteractiveOptions): void {
   const config = loadConfig();
   const posture = opts.posture ?? config.interactive.permissions;
   const args = buildInteractiveArgs({ adopt: opts.adopt, posture, passthrough: opts.passthrough });
+
+  process.stderr.write(postureBanner(posture) + "\n");
+  if (passthroughEscalates(posture, opts.passthrough)) {
+    process.stderr.write("limitless: warning — a permission flag in your passthrough overrides the chosen posture.\n");
+  }
 
   const cols = process.stdout.columns ?? 80;
   const rows = process.stdout.rows ?? 24;

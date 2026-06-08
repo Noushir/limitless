@@ -18,6 +18,7 @@ function deepMerge<T>(base: T, override: unknown): T {
   if (!isObject(base) || !isObject(override)) return (override as T) ?? base;
   const out: Record<string, unknown> = { ...base };
   for (const [k, v] of Object.entries(override)) {
+    if (k === "__proto__" || k === "constructor" || k === "prototype") continue;
     out[k] = k in base ? deepMerge((base as Record<string, unknown>)[k], v) : v;
   }
   return out as T;
@@ -26,6 +27,12 @@ function deepMerge<T>(base: T, override: unknown): T {
 export function loadConfig(home?: string): Config {
   const p = configPath(home);
   if (!fs.existsSync(p)) return DEFAULT_CONFIG;
-  const parsed = JSON.parse(fs.readFileSync(p, "utf8"));
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(fs.readFileSync(p, "utf8"));
+  } catch (e) {
+    process.stderr.write(`limitless: ignoring malformed config at ${p} (${(e as Error).message}); using defaults.\n`);
+    return DEFAULT_CONFIG;
+  }
   return deepMerge(DEFAULT_CONFIG, parsed);
 }

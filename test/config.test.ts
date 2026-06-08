@@ -37,4 +37,19 @@ describe("loadConfig", () => {
     fs.writeFileSync(configPath(home), JSON.stringify({ interactive: { permissions: "safe" } }));
     expect(loadConfig(home).interactive.permissions).toBe("safe");
   });
+
+  it("falls back to defaults on malformed config without throwing", () => {
+    fs.mkdirSync(limitlessDir(home), { recursive: true });
+    fs.writeFileSync(configPath(home), "{ not valid json ");
+    expect(() => loadConfig(home)).not.toThrow();
+    expect(loadConfig(home)).toEqual(DEFAULT_CONFIG);
+  });
+
+  it("ignores __proto__ keys in config (no prototype pollution)", () => {
+    fs.mkdirSync(limitlessDir(home), { recursive: true });
+    fs.writeFileSync(configPath(home), '{"__proto__":{"polluted":true}}');
+    const cfg = loadConfig(home);
+    expect(Object.getPrototypeOf(cfg)).toBe(Object.prototype);
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+  });
 });
