@@ -23,15 +23,16 @@ export function createPtyHost(command: string, args: string[], opts: PtyHostOpti
   let term: pty.IPty;
 
   const spawn = (spawnArgs: string[]) => {
-    term = pty.spawn(command, spawnArgs, {
+    const t = pty.spawn(command, spawnArgs, {
       name: "xterm-256color",
       cols: opts.cols ?? 80,
       rows: opts.rows ?? 24,
       cwd: opts.cwd ?? process.cwd(),
       env: opts.env ?? (process.env as Record<string, string>),
     });
-    term.onData((d) => dataCbs.forEach((cb) => cb(d)));
-    term.onExit((e) => exitCbs.forEach((cb) => cb(e.exitCode)));
+    term = t;
+    t.onData((d) => { if (t === term) dataCbs.forEach((cb) => cb(d)); });
+    t.onExit((e) => { if (t === term) exitCbs.forEach((cb) => cb(e.exitCode)); });
   };
 
   spawn(baseArgs);

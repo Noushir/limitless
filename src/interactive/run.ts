@@ -36,17 +36,26 @@ export function runInteractive(opts: RunInteractiveOptions): void {
 
   const sendInput = wireSession({ host, stdout: process.stdout, controller });
 
+  const onInput = (d: string) => sendInput(d);
   if (process.stdin.isTTY) process.stdin.setRawMode(true);
   process.stdin.resume();
   process.stdin.setEncoding("utf8");
-  process.stdin.on("data", (d: string) => sendInput(d));
+  process.stdin.on("data", onInput);
 
   const onResize = () => host.resize(process.stdout.columns ?? 80, process.stdout.rows ?? 24);
   process.stdout.on("resize", onResize);
 
-  host.onExit((code) => {
-    if (process.stdin.isTTY) try { process.stdin.setRawMode(false); } catch {}
+  const teardown = () => {
+    if (process.stdin.isTTY) { try { process.stdin.setRawMode(false); } catch {} }
+    process.stdin.off("data", onInput);
+    process.stdin.pause();
     process.stdout.off("resize", onResize);
+  };
+
+  process.on("SIGINT", () => { teardown(); host.kill(); process.exit(130); });
+
+  host.onExit((code) => {
+    teardown();
     process.exit(code ?? 0);
   });
 }

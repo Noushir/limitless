@@ -31,4 +31,19 @@ describe("PtyHost", () => {
     await new Promise((r) => setTimeout(r, 300));
     expect(() => host.write("late\r")).not.toThrow();
   });
+
+  it("relaunch does not fire onExit for the superseded term", async () => {
+    const exits: number[] = [];
+    const host = createPtyHost("node", [stub], { cols: 80, rows: 24 });
+    host.onExit((c) => exits.push(c));
+    await new Promise((r) => setTimeout(r, 300));
+    host.relaunch([]); // kills old term, spawns a fresh one
+    await new Promise((r) => setTimeout(r, 500));
+    expect(exits.length).toBe(0); // superseded term's exit must NOT propagate
+    await new Promise<void>((resolve) => {
+      host.onExit(() => resolve());
+      host.write("quit\r"); // exit the NEW term
+    });
+    expect(exits.length).toBe(1); // exactly one real exit
+  });
 });
