@@ -22,14 +22,15 @@ reliability. A headless mode handles unattended task runs.
 ## Install
 
 ```bash
-npm install -g limitless
+npm install -g claude-limitless
 ```
 
-A postinstall script makes `node-pty`'s `spawn-helper` executable (fixes `posix_spawnp
-failed` on macOS). If you install from source:
+The package is `claude-limitless`; the installed command is **`limitless`**. A postinstall
+script makes `node-pty`'s `spawn-helper` executable (fixes `posix_spawnp failed` on macOS).
+If you install from source:
 
 ```bash
-git clone <repo>
+git clone https://github.com/Noushir/limitless
 cd limitless
 npm install && npm run build && npm link
 ```

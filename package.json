@@ -1,7 +1,7 @@
 {
-  "name": "limitless",
+  "name": "claude-limitless",
   "version": "0.1.0",
-  "description": "Keep a Claude Code task running across usage-limit windows.",
+  "description": "Keep your Claude Code session running across usage-limit windows (interactive TUI wrap + headless runner). Command: limitless.",
   "type": "module",
   "bin": { "limitless": "./dist/cli.js" },
   "engines": { "node": ">=20" },
