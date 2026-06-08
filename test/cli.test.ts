@@ -27,4 +27,13 @@ describe("parseArgs", () => {
     expect(parseArgs(["status"]).command).toBe("status");
     expect(parseArgs(["config"]).command).toBe("config");
   });
+  it("--version / -v -> version", () => {
+    expect(parseArgs(["--version"]).command).toBe("version");
+    expect(parseArgs(["-v"]).command).toBe("version");
+  });
+  it("--help / -h / help -> help", () => {
+    expect(parseArgs(["--help"]).command).toBe("help");
+    expect(parseArgs(["-h"]).command).toBe("help");
+    expect(parseArgs(["help"]).command).toBe("help");
+  });
 });

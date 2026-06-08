@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import os from "node:os";
+import { createRequire } from "node:module";
 import { loadConfig } from "./config.js";
 import { listRunStates } from "./state.js";
 import { runLoop } from "./runner.js";
@@ -9,13 +10,40 @@ import { macNotifier } from "./notify.js";
 import { runInteractive } from "./interactive/run.js";
 import type { InteractivePermission, PermissionPosture, RunMode } from "./types.js";
 
+const require = createRequire(import.meta.url);
+function readVersion(): string {
+  try {
+    return (require("../package.json") as { version: string }).version;
+  } catch {
+    return "0.0.0";
+  }
+}
+
+const HELP_TEXT = `limitless — keep your Claude Code session going across usage-limit windows
+
+Usage:
+  limitless                          Launch Claude (interactive), wrapped by limitless
+  limitless resume                   Adopt & continue the latest session in this dir
+  limitless --safe | --auto | --normal   Interactive permission posture (default: safe)
+  limitless -- <claude args>         Pass extra args through to claude
+  limitless headless "<task>"        Unattended task runner
+  limitless headless --goal "<cond>" Headless, completion-condition driven
+  limitless headless --continue      Adopt last headless session
+  limitless headless --safe|--yolo   Headless permission posture
+  limitless status                   List runs / wrapped sessions
+  limitless config                   Print resolved config
+  limitless --version                Print version
+  limitless --help                   Show this help
+
+Config: ~/.limitless/config.json`;
+
 export interface HeadlessIntent {
   mode: RunMode;
   postureOverride?: PermissionPosture;
 }
 
 export interface ParsedArgs {
-  command: "interactive" | "headless" | "status" | "config";
+  command: "interactive" | "headless" | "status" | "config" | "help" | "version";
   adopt?: boolean;
   posture?: InteractivePermission;
   passthrough?: string[];
@@ -33,6 +61,8 @@ function parseHeadless(argv: string[]): HeadlessIntent {
 }
 
 export function parseArgs(argv: string[]): ParsedArgs {
+  if (argv[0] === "--help" || argv[0] === "-h" || argv[0] === "help") return { command: "help" };
+  if (argv[0] === "--version" || argv[0] === "-v") return { command: "version" };
   if (argv[0] === "status") return { command: "status" };
   if (argv[0] === "config") return { command: "config" };
   if (argv[0] === "headless") return { command: "headless", headless: parseHeadless(argv.slice(1)) };
@@ -55,6 +85,8 @@ export function parseArgs(argv: string[]): ParsedArgs {
 export async function main(argv: string[]): Promise<void> {
   const parsed = parseArgs(argv);
 
+  if (parsed.command === "help") { console.log(HELP_TEXT); return; }
+  if (parsed.command === "version") { console.log(readVersion()); return; }
   if (parsed.command === "status") {
     const runs = listRunStates();
     if (runs.length === 0) { console.log("No runs yet."); return; }
