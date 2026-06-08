@@ -237,3 +237,20 @@ reset timestamp (when available) or falls back to poll-retry backoff
 - **`weeklyLimitBehavior: "wait"`** is defined in config but behavior under a full 7-day
   window is not yet validated.
 - **macOS notifications only** (`osascript`). On Linux/Windows: set a webhook instead.
+
+---
+
+## Respects your usage limits
+
+limitless does **not** bypass, circumvent, or evade Claude's usage limits. It waits for the
+*official* reset window and then continues — it simply automates the "come back after the
+limit resets" step you'd otherwise do by hand. It drives the official `claude` CLI as you,
+with your own account and entitlements, and adds no API access of its own.
+
+## Disclaimer
+
+This is an **unofficial, community project**. It is **not affiliated with, endorsed by, or
+sponsored by Anthropic**. "Claude" and "Claude Code" are trademarks of Anthropic, used here
+only nominatively to describe compatibility. Your use of the Claude CLI through this tool
+remains subject to Anthropic's own terms of service and usage policies. The software is
+provided "as is" under the MIT License, without warranty — see [LICENSE](LICENSE).
