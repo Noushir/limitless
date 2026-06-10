@@ -1,6 +1,6 @@
 {
   "name": "claude-limitless",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Keep your Claude Code session running across usage-limit windows (interactive TUI wrap + headless runner). Command: limitless.",
   "keywords": ["claude", "claude-code", "anthropic", "cli", "usage-limit", "rate-limit", "auto-resume", "pty", "tui"],
   "homepage": "https://github.com/Noushir/limitless#readme",

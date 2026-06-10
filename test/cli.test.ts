@@ -12,6 +12,12 @@ describe("parseArgs", () => {
   it("resume -> interactive adopt", () => {
     expect(parseArgs(["resume"])).toMatchObject({ command: "interactive", adopt: true });
   });
+  it("resume <id> -> interactive adopt with resumeId", () => {
+    expect(parseArgs(["resume", "fee6a4d1-ce7c"])).toMatchObject({ command: "interactive", adopt: true, resumeId: "fee6a4d1-ce7c" });
+  });
+  it("resume with no id -> resumeId undefined", () => {
+    expect(parseArgs(["resume"]).resumeId).toBeUndefined();
+  });
   it("interactive posture flags", () => {
     expect(parseArgs(["--safe"]).posture).toBe("safe");
     expect(parseArgs(["--normal"]).posture).toBe("normal");

@@ -29,6 +29,17 @@ describe("buildInteractiveArgs", () => {
     const a = buildInteractiveArgs({ adopt: false, posture: "normal", passthrough: ["--model", "opus"] });
     expect(a).toEqual(["--model", "opus"]);
   });
+  it("resume with a session id uses --resume <id>, not --continue", () => {
+    const a = buildInteractiveArgs({ adopt: true, resumeId: "fee6a4d1", posture: "safe" });
+    expect(a).toContain("--resume");
+    expect(a).toContain("fee6a4d1");
+    expect(a).not.toContain("--continue");
+  });
+  it("resume without an id falls back to --continue", () => {
+    const a = buildInteractiveArgs({ adopt: true, posture: "safe" });
+    expect(a).toContain("--continue");
+    expect(a).not.toContain("--resume");
+  });
 });
 
 describe("postureBanner", () => {

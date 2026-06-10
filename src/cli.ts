@@ -47,6 +47,7 @@ export interface HeadlessIntent {
 export interface ParsedArgs {
   command: "interactive" | "headless" | "status" | "config" | "help" | "version";
   adopt?: boolean;
+  resumeId?: string;
   posture?: InteractivePermission;
   passthrough?: string[];
   headless?: HeadlessIntent;
@@ -74,6 +75,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
   const dashDash = rest.indexOf("--");
   const passthrough = dashDash !== -1 ? rest.slice(dashDash + 1) : undefined;
   const flags = dashDash !== -1 ? rest.slice(0, dashDash) : rest;
+  const resumeId = adopt ? flags.find((a) => !a.startsWith("-")) : undefined;
   const posture: InteractivePermission | undefined = flags.includes("--safe")
     ? "safe"
     : flags.includes("--normal")
@@ -81,7 +83,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
       : flags.includes("--auto")
         ? "auto"
         : undefined;
-  return { command: "interactive", adopt, posture, passthrough };
+  return { command: "interactive", adopt, resumeId, posture, passthrough };
 }
 
 export async function main(argv: string[]): Promise<void> {
@@ -118,7 +120,7 @@ export async function main(argv: string[]): Promise<void> {
     process.exitCode = state.status === "done" ? 0 : 1;
     return;
   }
-  runInteractive({ adopt: parsed.adopt ?? false, posture: parsed.posture, passthrough: parsed.passthrough });
+  runInteractive({ adopt: parsed.adopt ?? false, resumeId: parsed.resumeId, posture: parsed.posture, passthrough: parsed.passthrough });
 }
 
 export function isMainModule(metaUrl: string, argv1: string | undefined): boolean {

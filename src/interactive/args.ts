@@ -17,10 +17,11 @@ export interface InteractiveArgsOptions {
   adopt: boolean; // true for `limitless resume` (continue the latest session in cwd)
   posture: InteractivePermission;
   passthrough?: string[]; // extra args after `--`
+  resumeId?: string; // resume a specific session by id (claude --resume <id>)
 }
 
 export function buildInteractiveArgs(opts: InteractiveArgsOptions): string[] {
-  const base = opts.adopt ? ["--continue"] : [];
+  const base = opts.resumeId ? ["--resume", opts.resumeId] : opts.adopt ? ["--continue"] : [];
   return [...base, ...interactivePermissionFlags(opts.posture), ...(opts.passthrough ?? [])];
 }
 

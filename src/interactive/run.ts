@@ -12,6 +12,7 @@ import type { InteractivePermission } from "../types.js";
 
 export interface RunInteractiveOptions {
   adopt: boolean;
+  resumeId?: string;
   posture?: InteractivePermission;
   passthrough?: string[];
 }
@@ -19,7 +20,7 @@ export interface RunInteractiveOptions {
 export function runInteractive(opts: RunInteractiveOptions): void {
   const config = loadConfig();
   const posture = opts.posture ?? config.interactive.permissions;
-  const args = buildInteractiveArgs({ adopt: opts.adopt, posture, passthrough: opts.passthrough });
+  const args = buildInteractiveArgs({ adopt: opts.adopt, resumeId: opts.resumeId, posture, passthrough: opts.passthrough });
 
   if (passthroughEscalates(posture, opts.passthrough)) {
     process.stderr.write(

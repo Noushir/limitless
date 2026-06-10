@@ -65,15 +65,24 @@ so everything looks and feels identical. When you hit a usage limit:
 
 Terminal content is never erased (Claude renders inline, not in the alternate screen).
 
-### `limitless resume` — adopt the latest session and continue it at reset
+### `limitless resume` — adopt the latest session (or a specific one) and continue it at reset
 
 ```bash
-limitless resume
+limitless resume                   # adopt the latest session in the cwd (claude --continue)
+limitless resume <session-id>      # resume a specific session by id (claude --resume <id>)
 ```
 
 For when you started with bare `claude` and got stuck: limitless adopts the latest session
 in the current directory (`claude --continue`) and will continue it at the next reset,
 wrapping it going forward.
+
+If you know the session id you want to resume, pass it as the first argument —
+limitless will call `claude --resume <session-id>` instead of `--continue`. You can
+combine this with posture flags and passthrough args as usual:
+
+```bash
+limitless resume fee6a4d1 --normal -- --model claude-opus-4-5
+```
 
 ### Permission posture flags
 

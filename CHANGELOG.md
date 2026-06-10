@@ -12,6 +12,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   whether in-place injection resumes the TUI vs. needing the relaunch fallback.
 - Windows support (spawn resolution for `claude.cmd`, Windows CI).
 
+## [0.1.1] - 2026-06-10
+
+### Added
+
+- `limitless resume <session-id>` — resume a specific Claude session by id (passes
+  `claude --resume <id>`). `limitless resume` with no id still adopts the latest
+  session in the current directory.
+
 ## [0.1.0] - 2026-06-08
 
 First public release. Command: `limitless`.
@@ -36,5 +44,6 @@ First public release. Command: `limitless`.
 - `status` and `config` commands; `--version` / `--help`.
 - Config at `~/.limitless/config.json`; run state at `~/.limitless/runs/`.
 
-[Unreleased]: https://github.com/Noushir/limitless/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Noushir/limitless/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Noushir/limitless/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Noushir/limitless/releases/tag/v0.1.0
