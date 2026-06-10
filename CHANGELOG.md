@@ -8,17 +8,41 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Pending
 
-- Real-limit verification spike: confirm the exact usage-limit banner text and
-  whether in-place injection resumes the TUI vs. needing the relaunch fallback.
+- Live re-verification of the resume path against a real limit with the
+  reset-aware timing + billing guard in place.
 - Windows support (spawn resolution for `claude.cmd`, Windows CI).
 
 ## [0.1.1] - 2026-06-10
+
+Adds specific-session resume, and resolves the real-limit spike using captured
+evidence of Claude Code v2.1.x's native limit UX (two billing-safety fixes plus
+a cosmetic cleanup).
 
 ### Added
 
 - `limitless resume <session-id>` — resume a specific Claude session by id (passes
   `claude --resume <id>`). `limitless resume` with no id still adopts the latest
   session in the current directory.
+
+### Fixed
+
+- **Wait for the actual reset window.** Interactive resume now parses the reset
+  time out of the limit banner (`resets 1:10am (Europe/London)`, `resets in 3h`,
+  24h/AM-PM, IANA zones) and sleeps until then, instead of poking the session
+  after a 60-second backoff — which previously woke it hours before reset while
+  still limited.
+- **Never auto-confirm paid usage.** If a "usage credits" / "extra usage" prompt
+  is on screen at resume time, limitless refuses to inject and hands control back
+  to you. A blind injected Enter landing on such a prompt was how a continue could
+  silently turn on extra usage.
+- **No blind Enter into menus.** When the native "Stop and wait / Upgrade" chooser
+  is focused, limitless sends `Esc` to dismiss it before typing `continue`, rather
+  than confirming whatever option is highlighted.
+
+### Changed
+
+- The posture banner is now dimmed with a separating blank line so it no longer
+  crowds Claude's startup splash.
 
 ## [0.1.0] - 2026-06-08
 

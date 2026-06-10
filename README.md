@@ -12,9 +12,11 @@ window and continues your same live session in place — presence-aware (auto-co
 you're away, holds for Enter if you're at the keyboard), with a relaunch fallback for
 reliability. A headless mode handles unattended task runs.
 
-> **Early version.** The exact limit-banner detection and the in-place-vs-relaunch
-> behavior depend on a real-limit spike that is still pending. Behavior may change in a
-> patch release.
+> **Early version.** Limit detection is confirmed against Claude Code v2.1.x's native
+> limit UX (the `You've hit your … limit · resets <time>` banner and the "Stop and wait /
+> Upgrade" chooser). On a limit, limitless now waits for the banner's **actual reset time**
+> and **never auto-confirms a paid-usage prompt** — see [Respects your usage limits](#respects-your-usage-limits).
+> Behavior may still change in a patch release.
 
 ---
 
@@ -217,12 +219,19 @@ format:
 **Interactive mode:** limitless spawns `claude` inside a `node-pty` pseudo-terminal at
 your terminal's current dimensions. All input and output pass through transparently —
 resize events are forwarded too. A limit-detector reads the (ANSI-stripped) output stream
-and fires when the usage-limit banner appears. A presence-tracker records your last
-keystroke time. The resume-controller state machine then waits out the reset window and
-either injects `continue` in-place (when you're idle) or holds for your keypress (when
-you're present); if in-place injection doesn't resume the session, it relaunches
-`claude --continue` in the same pty. Resume cycles are bounded by `guards.maxCycles` /
-`guards.maxWallClockHours`.
+and fires when the usage-limit banner appears, and a reset-parser reads the banner's
+`resets <time>` so limitless waits for the **real** reset window rather than a blind
+backoff. A presence-tracker records your last keystroke time. The resume-controller state
+machine then either injects `continue` in-place (when you're idle) or holds for your
+keypress (when you're present); if in-place injection doesn't resume the session, it
+relaunches `claude --continue` in the same pty.
+
+**Billing safety:** before injecting, limitless inspects what's on screen. If a paid-usage
+prompt is showing ("usage credits", "extra usage"), it **refuses to inject and hands
+control back to you** — it will not spend money on your behalf. If a benign chooser is
+focused (the native "Stop and wait / Upgrade" menu), it sends `Esc` to dismiss it rather
+than confirming an option with a blind Enter. Resume cycles are bounded by
+`guards.maxCycles` / `guards.maxWallClockHours`.
 
 **Headless mode:** limitless launches `claude -p <prompt> --output-format json` with the
 appropriate permission flags, inspects the result, and on a usage-limit signal reads the
@@ -234,13 +243,14 @@ reset timestamp (when available) or falls back to poll-retry backoff
 
 ## Status / limitations
 
-- **Limit-banner detection** is heuristic. The exact text + ANSI as rendered in the
-  interactive TUI is still being confirmed experimentally (real-limit spike pending). The
-  inject-poll-retry + relaunch-fallback approach is correct either way, just less precise
-  on timing until the banner is confirmed.
-- **In-place vs relaunch:** whether injecting `continue` into the blocked TUI actually
-  resumes it is also pending a real-limit event. The relaunch fallback guarantees forward
-  progress regardless.
+- **Limit-banner detection** is heuristic but confirmed against Claude Code v2.1.x: it
+  matches the `You've hit your <session|weekly|…> limit · resets <time>` banner. When the
+  banner carries a reset time, limitless waits until that time (+ a small margin); when it
+  doesn't, it falls back to poll-retry backoff.
+- **In-place vs relaunch:** limitless injects `continue` once the window reopens; the
+  relaunch fallback (`claude --continue`) guarantees forward progress if injection doesn't
+  take. It will **not** auto-confirm a paid-usage ("usage credits" / "extra usage") prompt —
+  if one is on screen it pauses and returns control to you.
 - **`--auto` flag mapping** (`--dangerously-skip-permissions`) is provisional — confirmed
   by the PTY spike but subject to change if the Claude CLI surface changes.
 - **`weeklyLimitBehavior: "wait"`** is defined in config but behavior under a full 7-day

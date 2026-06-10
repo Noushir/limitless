@@ -29,7 +29,9 @@ export function runInteractive(opts: RunInteractiveOptions): void {
     );
     process.exit(2);
   }
-  process.stderr.write(postureBanner(posture) + "\n");
+  // Dim the banner so it reads as limitless chrome, and leave a blank line so it doesn't
+  // crowd Claude's own splash when the TUI draws.
+  process.stderr.write(`\x1b[2m${postureBanner(posture)}\x1b[0m\n\n`);
 
   const cols = process.stdout.columns ?? 80;
   const rows = process.stdout.rows ?? 24;

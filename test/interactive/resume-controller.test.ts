@@ -54,6 +54,31 @@ describe("ResumeController", () => {
     expect(controller.getState()).toBe("pass_through");
   });
 
+  it("never injects when a paid-usage prompt is on screen — steps back to the user", async () => {
+    const { controller, writes, relaunches } = makeController({ idle: true });
+    controller.onOutput("You've hit your usage limit · resets 3pm\nContinuing with usage credits");
+    for (let i = 0; i < 6; i++) await settle();
+    expect(writes).not.toContain("continue\r");
+    expect(writes).not.toContain("\x1b");
+    expect(relaunches).toEqual([]); // must not relaunch into a paid prompt either
+    expect(controller.getState()).toBe("pass_through");
+  });
+
+  it("dismisses a benign menu with Esc before typing continue (no blind Enter)", async () => {
+    const { controller, writes } = makeController({ idle: true });
+    controller.onOutput(
+      "You've hit your usage limit · resets 3pm\nStop and wait for limit to reset\nEnter to confirm · Esc to cancel",
+    );
+    await settle();
+    controller.onOutput("continuing the task...\n"); // progress after inject
+    await settle();
+    await settle();
+    expect(writes).toContain("\x1b");
+    expect(writes).toContain("continue\r");
+    expect(writes.indexOf("\x1b")).toBeLessThan(writes.indexOf("continue\r"));
+    expect(controller.getState()).toBe("pass_through");
+  });
+
   it("when present, holds for the user's Enter before injecting", async () => {
     const { controller, writes } = makeController({ idle: false });
     controller.onOutput("You've hit your usage limit · resets 3pm"); // block
