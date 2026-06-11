@@ -25,17 +25,6 @@ export function buildInteractiveArgs(opts: InteractiveArgsOptions): string[] {
   return [...base, ...interactivePermissionFlags(opts.posture), ...(opts.passthrough ?? [])];
 }
 
-export function postureBanner(posture: InteractivePermission): string {
-  switch (posture) {
-    case "auto":
-      return "limitless: posture=AUTO — all tool approvals bypassed (shell + network run unattended). Use --safe or --normal to reduce.";
-    case "safe":
-      return "limitless: posture=SAFE — edits auto-approved; raw shell/network gated.";
-    case "normal":
-      return "limitless: posture=NORMAL — Claude prompts for approvals.";
-  }
-}
-
 // True when a non-auto posture is silently overridden by a permission flag in passthrough.
 export function passthroughEscalates(posture: InteractivePermission, passthrough: string[] | undefined): boolean {
   if (posture === "auto" || !passthrough) return false;

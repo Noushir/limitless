@@ -15,6 +15,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.1.3] - 2026-06-11
 
+### Added
+
+- **Boxed `∞ limitless` banner with the tagline.** Startup now shows a bordered,
+  bold-green wordmark with the "keeps your session alive across usage limits"
+  tagline and the active posture (AUTO's safety warning is called out beneath the
+  box). Replaces the bare one-line posture print, which read like a debug message
+  and dropped the tagline.
+- **Persistent terminal title.** limitless sets the window/tab title to
+  `∞ limitless — Claude`, so its branding survives Claude repainting the screen on
+  resume — when a top-of-screen banner would otherwise scroll out of view.
+
 ### Fixed
 
 - **`limitless --resume` / `--continue` now work.** The dashed flag forms (which

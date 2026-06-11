@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { interactivePermissionFlags, buildInteractiveArgs, postureBanner, passthroughEscalates } from "../../src/interactive/args.js";
+import { interactivePermissionFlags, buildInteractiveArgs, passthroughEscalates } from "../../src/interactive/args.js";
 
 describe("interactivePermissionFlags", () => {
   it("auto -> skip permissions", () => {
@@ -39,17 +39,6 @@ describe("buildInteractiveArgs", () => {
     const a = buildInteractiveArgs({ adopt: true, posture: "safe" });
     expect(a).toContain("--continue");
     expect(a).not.toContain("--resume");
-  });
-});
-
-describe("postureBanner", () => {
-  it("auto banner warns about bypassed approvals", () => {
-    expect(postureBanner("auto")).toMatch(/AUTO/);
-    expect(postureBanner("auto")).toMatch(/bypassed/i);
-  });
-  it("safe and normal banners are informative", () => {
-    expect(postureBanner("safe")).toMatch(/SAFE/);
-    expect(postureBanner("normal")).toMatch(/NORMAL/);
   });
 });
 

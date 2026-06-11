@@ -7,8 +7,8 @@ import { createPresenceTracker } from "./presence.js";
 import { createLimitDetector } from "./limit-detector.js";
 import { ResumeController } from "./resume-controller.js";
 import { wireSession } from "./session.js";
-import { buildInteractiveArgs, postureBanner, passthroughEscalates } from "./args.js";
-import { brandLogo } from "./brand.js";
+import { buildInteractiveArgs, passthroughEscalates } from "./args.js";
+import { brandLogo, terminalTitle } from "./brand.js";
 import type { InteractivePermission } from "../types.js";
 
 export interface RunInteractiveOptions {
@@ -30,9 +30,10 @@ export function runInteractive(opts: RunInteractiveOptions): void {
     );
     process.exit(2);
   }
-  // Branded ∞ limitless logo over a dim posture line, with a blank line so it frames
-  // Claude's own splash rather than crowding it.
-  process.stderr.write(brandLogo(postureBanner(posture)));
+  // Set a persistent ∞ limitless title (survives Claude repainting the screen on resume),
+  // then print the boxed branded banner with a blank line so it frames Claude's own splash.
+  process.stderr.write(terminalTitle("∞ limitless — Claude"));
+  process.stderr.write(brandLogo(posture));
 
   const cols = process.stdout.columns ?? 80;
   const rows = process.stdout.rows ?? 24;
