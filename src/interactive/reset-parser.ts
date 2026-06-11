@@ -28,7 +28,10 @@ export function parseResetEpochSeconds(text: string, nowSeconds: number): number
   if (ampm === "am" && hour === 12) hour = 0;
   if (hour > 23 || minute > 59) return undefined;
 
-  const tz = /\(([A-Za-z]+\/[A-Za-z_]+)\)/.exec(s)?.[1];
+  // Capture whatever zone Claude printed in parens — a full IANA name (one or more slashes,
+  // e.g. America/Argentina/Buenos_Aires) or a bare identifier like UTC. Intl validates it in
+  // nextOccurrenceEpoch; anything it doesn't recognize (e.g. "PST") falls back to host-local.
+  const tz = /\(([A-Za-z_]+(?:\/[A-Za-z_]+)*)\)/.exec(s)?.[1];
   return nextOccurrenceEpoch(hour, minute, tz, nowSeconds);
 }
 

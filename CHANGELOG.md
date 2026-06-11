@@ -42,6 +42,16 @@ limitless its own visual identity inside the wrapped terminal.
   is also showing, it touches nothing and hands control back to you, as before.)
 - The startup posture line is now the branded `∞ limitless` logo.
 
+### Fixed
+
+- **Reset-time parsing works in any time zone.** The reset time and zone are read
+  verbatim from Claude's banner (never hardcoded) — confirmed across IANA zones
+  with awkward offsets (half-hour, southern-hemisphere DST, UTC+14) and multi-slash
+  names (`America/Argentina/Buenos_Aires`). A bare `(UTC)`/`(GMT)` zone is now
+  honored instead of being mistaken for host-local time; an unrecognized
+  abbreviation falls back to the machine's local zone (which is what Claude renders
+  the time in).
+
 ## [0.1.1] - 2026-06-10
 
 Adds specific-session resume, and resolves the real-limit spike using captured

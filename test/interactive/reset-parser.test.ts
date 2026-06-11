@@ -50,6 +50,44 @@ describe("parseResetEpochSeconds", () => {
   });
 });
 
+// Round-trip helper: what wall clock does `epoch` read in `tz`? Proves a zone resolved
+// correctly without brittle hand-computed UTC constants (and is DST-proof).
+const wallClock = (epoch: number, tz: string) =>
+  new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(
+    new Date(epoch * 1000),
+  );
+
+describe("parseResetEpochSeconds across time zones", () => {
+  // The zone in the banner is whatever Claude prints — never hardcoded. These lock in that
+  // the math holds for any IANA zone, including the awkward ones.
+  const cases: Array<[string, string, string]> = [
+    ["limit · resets 3:00pm (America/New_York)", "15:00", "America/New_York"],
+    ["limit · resets 11:30pm (Asia/Kolkata)", "23:30", "Asia/Kolkata"], // +5:30 half-hour offset
+    ["limit · resets 6:45am (Australia/Sydney)", "06:45", "Australia/Sydney"], // southern hemisphere
+    ["limit · resets 12:00pm (Pacific/Kiritimati)", "12:00", "Pacific/Kiritimati"], // UTC+14
+    ["limit · resets 9:30am (America/Argentina/Buenos_Aires)", "09:30", "America/Argentina/Buenos_Aires"], // multi-slash
+  ];
+  for (const [banner, wall, tz] of cases) {
+    it(`resolves ${tz} to the right wall-clock instant`, () => {
+      const epoch = parseResetEpochSeconds(banner, NOW)!;
+      expect(epoch).toBeGreaterThan(NOW);
+      expect(wallClock(epoch, tz)).toBe(wall);
+    });
+  }
+
+  it("honors a bare UTC zone (not host-local)", () => {
+    // 3:00pm UTC; 15:00 UTC on the NOW day is past, so the next occurrence is the next day.
+    expect(parseResetEpochSeconds("limit · resets 3:00pm (UTC)", NOW)).toBe(
+      Math.floor(Date.UTC(2026, 5, 11, 15, 0, 0) / 1000),
+    );
+  });
+
+  it("degrades gracefully for an unrecognized abbreviation (host-local, still a future epoch)", () => {
+    const epoch = parseResetEpochSeconds("limit · resets 8:00am (PST)", NOW);
+    expect(epoch).toBeGreaterThan(NOW); // does not crash; falls back to host-local interpretation
+  });
+});
+
 describe("parseResetLabel", () => {
   it("returns the human reset phrase from the real banner", () => {
     expect(parseResetLabel("You've hit your session limit · resets 1:10am (Europe/London)")).toBe(
