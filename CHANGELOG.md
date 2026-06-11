@@ -8,9 +8,39 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Pending
 
-- Live re-verification of the resume path against a real limit with the
-  reset-aware timing + billing guard in place.
+- Live re-verification of the *seamless* chooser path (limit hits while you're
+  away; limitless auto-dismisses the native menu and continues unattended). The
+  core reset-and-continue path is confirmed working against a real limit.
 - Windows support (spawn resolution for `claude.cmd`, Windows CI).
+
+## [0.1.2] - 2026-06-11
+
+Makes carrying a session across a limit genuinely hands-free, and gives
+limitless its own visual identity inside the wrapped terminal.
+
+### Added
+
+- **limitless branding in the terminal.** A bold-green `∞ limitless` wordmark at
+  startup (over the dim posture line), and branded status lines whenever
+  limitless acts — so it is always clear when limitless, not Claude, is in
+  control, and what it is doing. Previously a limit only fired a macOS
+  notification, leaving it ambiguous whether an on-screen "waiting" was Claude's
+  or limitless's.
+- **Reset time in the status line.** On a limit, limitless now prints
+  `usage limit reached — waiting for <reset time>, then continuing` (parsed from
+  the banner), and `the limit reset — continuing your session` when the window
+  reopens.
+
+### Changed
+
+- **Seamless limit handling.** The instant the limit is detected, limitless
+  dismisses Claude's native "Stop and wait / Upgrade" chooser (`Esc`) rather than
+  leaving it on screen for the whole wait — anyone running their session through
+  limitless has already chosen to continue across the limit, not upgrade. It
+  still parses the real reset time, waits for it, then continues. It never
+  selects a menu option and never touches the paid path. (If a paid-usage prompt
+  is also showing, it touches nothing and hands control back to you, as before.)
+- The startup posture line is now the branded `∞ limitless` logo.
 
 ## [0.1.1] - 2026-06-10
 
@@ -68,6 +98,7 @@ First public release. Command: `limitless`.
 - `status` and `config` commands; `--version` / `--help`.
 - Config at `~/.limitless/config.json`; run state at `~/.limitless/runs/`.
 
-[Unreleased]: https://github.com/Noushir/limitless/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/Noushir/limitless/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/Noushir/limitless/releases/tag/v0.1.2
 [0.1.1]: https://github.com/Noushir/limitless/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Noushir/limitless/releases/tag/v0.1.0

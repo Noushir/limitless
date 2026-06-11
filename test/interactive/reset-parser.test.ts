@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseResetEpochSeconds } from "../../src/interactive/reset-parser.js";
+import { parseResetEpochSeconds, parseResetLabel } from "../../src/interactive/reset-parser.js";
 
 // A fixed "now": 2026-06-10 20:53:00 UTC.
 const NOW = Math.floor(Date.UTC(2026, 5, 10, 20, 53, 0) / 1000);
@@ -47,5 +47,27 @@ describe("parseResetEpochSeconds", () => {
 
   it("ignores malformed times", () => {
     expect(parseResetEpochSeconds("resets 25:99 (Europe/London)", NOW)).toBeUndefined();
+  });
+});
+
+describe("parseResetLabel", () => {
+  it("returns the human reset phrase from the real banner", () => {
+    expect(parseResetLabel("You've hit your session limit · resets 1:10am (Europe/London)")).toBe(
+      "1:10am (Europe/London)",
+    );
+  });
+
+  it("returns the relative phrase", () => {
+    expect(parseResetLabel("resets in 3h 21m")).toBe("in 3h 21m");
+  });
+
+  it("takes only the reset line, not trailing output", () => {
+    expect(parseResetLabel("limit · resets 13:10 (Europe/London)\nStop and wait for limit to reset")).toBe(
+      "13:10 (Europe/London)",
+    );
+  });
+
+  it("returns undefined when no reset phrase is present", () => {
+    expect(parseResetLabel("You've hit your session limit")).toBeUndefined();
   });
 });

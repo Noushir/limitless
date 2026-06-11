@@ -32,6 +32,16 @@ export function parseResetEpochSeconds(text: string, nowSeconds: number): number
   return nextOccurrenceEpoch(hour, minute, tz, nowSeconds);
 }
 
+// Human-readable reset phrase for the branded status line, e.g. "1:10am (Europe/London)"
+// or "in 3h 21m". Takes just the reset clause from its own line, so trailing menu/output
+// on later lines is not swept in. Returns undefined when the banner carries no reset phrase.
+export function parseResetLabel(text: string): string | undefined {
+  const m = /resets?\s+(.+)/i.exec(stripAnsi(text));
+  if (!m) return undefined;
+  const label = m[1].split("\n")[0].trim().replace(/[.\s]+$/, "");
+  return label || undefined;
+}
+
 // Epoch (seconds) of the next time the wall clock reads hour:minute in `tz` (IANA name),
 // strictly after nowSeconds. Falls back to the host's local timezone when `tz` is missing
 // or not a zone Intl recognizes.

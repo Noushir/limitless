@@ -2,7 +2,8 @@ import { nextWaitSeconds, type Clock } from "../scheduler.js";
 import { notify, type Notifier } from "../notify.js";
 import type { Config } from "../types.js";
 import { stripAnsi, type LimitDetector } from "./limit-detector.js";
-import { parseResetEpochSeconds } from "./reset-parser.js";
+import { parseResetEpochSeconds, parseResetLabel } from "./reset-parser.js";
+import { brandStatus } from "./brand.js";
 import type { PresenceTracker } from "./presence.js";
 
 export type ControllerState = "pass_through" | "waiting" | "resuming";
@@ -30,8 +31,9 @@ export const MENU_FOCUS_PATTERNS: RegExp[] = [
 const RECENT_OUTPUT_TAIL = 4000;
 
 export interface ControllerEffects {
-  write(data: string): void; // inject into the pty
+  write(data: string): void; // inject into the pty (Claude's stdin)
   relaunch(args: string[]): void; // relaunch claude in the pty
+  status(text: string): void; // write limitless's own branded chrome to the user's terminal
 }
 
 export interface ControllerDeps {
@@ -70,10 +72,26 @@ export class ResumeController {
     this.recentOutput = (this.recentOutput + stripAnsi(chunk)).slice(-RECENT_OUTPUT_TAIL);
     const blocked = this.deps.detector.push(chunk);
     if (blocked && this.state === "pass_through") {
-      this.resetsAt = parseResetEpochSeconds(this.recentOutput, this.deps.clock.now());
+      this.onLimitDetected();
       this.state = "waiting";
       void this.runResume();
     }
+  }
+
+  // Runs the moment the limit banner appears. Anyone who launched their session *through*
+  // limitless has already chosen "continue across the limit", not "upgrade" — so we dismiss
+  // Claude's chooser right now (not hours later at reset) so the prompt doesn't sit on screen
+  // the whole wait, and we surface a branded line so it's clear limitless has taken over.
+  // The one exception is a paid-usage prompt: if money is in play we touch nothing and let
+  // the runResume guard hand control back to the user.
+  private onLimitDetected(): void {
+    const { effects, clock } = this.deps;
+    this.resetsAt = parseResetEpochSeconds(this.recentOutput, clock.now());
+    const paid = PAID_PROMPT_PATTERNS.some((re) => re.test(this.recentOutput));
+    if (paid) return;
+    if (MENU_FOCUS_PATTERNS.some((re) => re.test(this.recentOutput))) effects.write("\x1b");
+    const label = parseResetLabel(this.recentOutput) ?? "the reset";
+    effects.status(brandStatus(`usage limit reached — waiting for ${label}, then continuing`));
   }
 
   private async runResume(): Promise<void> {
@@ -116,6 +134,7 @@ export class ResumeController {
       if (MENU_FOCUS_PATTERNS.some((re) => re.test(this.recentOutput))) {
         effects.write("\x1b");
       }
+      effects.status(brandStatus("the limit reset — continuing your session"));
       effects.write("continue\r");
 
       // NOTE (spike): if the real PTY raw-echoes the injected "continue", that echo could

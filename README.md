@@ -12,11 +12,12 @@ window and continues your same live session in place — presence-aware (auto-co
 you're away, holds for Enter if you're at the keyboard), with a relaunch fallback for
 reliability. A headless mode handles unattended task runs.
 
-> **Early version.** Limit detection is confirmed against Claude Code v2.1.x's native
-> limit UX (the `You've hit your … limit · resets <time>` banner and the "Stop and wait /
-> Upgrade" chooser). On a limit, limitless now waits for the banner's **actual reset time**
-> and **never auto-confirms a paid-usage prompt** — see [Respects your usage limits](#respects-your-usage-limits).
-> Behavior may still change in a patch release.
+> **Early version.** Confirmed against Claude Code v2.1.x's native limit UX (the
+> `You've hit your … limit · resets <time>` banner and the "Stop and wait / Upgrade" chooser),
+> including a real-limit run that waited out the reset and continued the task. On a limit,
+> limitless dismisses the chooser, waits for the banner's **actual reset time**, continues the
+> session, and **never auto-confirms a paid-usage prompt** — see
+> [Respects your usage limits](#respects-your-usage-limits). Behavior may still change in a patch release.
 
 ---
 
@@ -226,12 +227,14 @@ machine then either injects `continue` in-place (when you're idle) or holds for 
 keypress (when you're present); if in-place injection doesn't resume the session, it
 relaunches `claude --continue` in the same pty.
 
-**Billing safety:** before injecting, limitless inspects what's on screen. If a paid-usage
-prompt is showing ("usage credits", "extra usage"), it **refuses to inject and hands
-control back to you** — it will not spend money on your behalf. If a benign chooser is
-focused (the native "Stop and wait / Upgrade" menu), it sends `Esc` to dismiss it rather
-than confirming an option with a blind Enter. Resume cycles are bounded by
-`guards.maxCycles` / `guards.maxWallClockHours`.
+**Seamless + billing-safe:** the moment a limit is detected, limitless dismisses Claude's
+native "Stop and wait / Upgrade" chooser with `Esc` — running your session through limitless
+already means "continue across the limit, not upgrade", so the menu doesn't sit on screen for
+the whole wait. It then prints a branded `∞ limitless` status line naming the real reset time,
+waits for it, and continues — with a second status line when the window reopens. It **never**
+selects a menu option, and if a paid-usage prompt ("usage credits", "extra usage") is showing
+it **touches nothing and hands control back to you** — it will not spend money on your behalf.
+Resume cycles are bounded by `guards.maxCycles` / `guards.maxWallClockHours`.
 
 **Headless mode:** limitless launches `claude -p <prompt> --output-format json` with the
 appropriate permission flags, inspects the result, and on a usage-limit signal reads the

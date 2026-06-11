@@ -8,6 +8,7 @@ import { createLimitDetector } from "./limit-detector.js";
 import { ResumeController } from "./resume-controller.js";
 import { wireSession } from "./session.js";
 import { buildInteractiveArgs, postureBanner, passthroughEscalates } from "./args.js";
+import { brandLogo } from "./brand.js";
 import type { InteractivePermission } from "../types.js";
 
 export interface RunInteractiveOptions {
@@ -29,9 +30,9 @@ export function runInteractive(opts: RunInteractiveOptions): void {
     );
     process.exit(2);
   }
-  // Dim the banner so it reads as limitless chrome, and leave a blank line so it doesn't
-  // crowd Claude's own splash when the TUI draws.
-  process.stderr.write(`\x1b[2m${postureBanner(posture)}\x1b[0m\n\n`);
+  // Branded ∞ limitless logo over a dim posture line, with a blank line so it frames
+  // Claude's own splash rather than crowding it.
+  process.stderr.write(brandLogo(postureBanner(posture)));
 
   const cols = process.stdout.columns ?? 80;
   const rows = process.stdout.rows ?? 24;
@@ -43,7 +44,13 @@ export function runInteractive(opts: RunInteractiveOptions): void {
     clock: systemClock,
     config,
     notifier: macNotifier,
-    effects: { write: (d) => host.write(d), relaunch: (a) => host.relaunch(a) },
+    effects: {
+      write: (d) => host.write(d),
+      relaunch: (a) => host.relaunch(a),
+      // limitless's own chrome goes straight to the user's terminal (stderr), never through
+      // the pty — writing it to `write` would type it into Claude's input instead.
+      status: (t) => process.stderr.write(t),
+    },
   });
 
   const sendInput = wireSession({ host, stdout: process.stdout, controller });
