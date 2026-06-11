@@ -18,6 +18,31 @@ describe("parseArgs", () => {
   it("resume with no id -> resumeId undefined", () => {
     expect(parseArgs(["resume"]).resumeId).toBeUndefined();
   });
+  it("--resume flag -> interactive adopt (alias for the resume subcommand)", () => {
+    expect(parseArgs(["--resume"])).toMatchObject({ command: "interactive", adopt: true });
+  });
+  it("--continue flag -> interactive adopt", () => {
+    expect(parseArgs(["--continue"])).toMatchObject({ command: "interactive", adopt: true });
+  });
+  it("--resume <id> -> adopt with resumeId", () => {
+    expect(parseArgs(["--resume", "fee6a4d1"])).toMatchObject({ command: "interactive", adopt: true, resumeId: "fee6a4d1" });
+  });
+  it("--resume composes with a posture flag", () => {
+    expect(parseArgs(["--safe", "--resume"])).toMatchObject({ command: "interactive", adopt: true, posture: "safe" });
+  });
+  it("rejects an unknown flag instead of silently swallowing it", () => {
+    const r = parseArgs(["--model", "opus"]);
+    expect(r.command).toBe("error");
+    expect(r.error).toMatch(/--model/);
+    expect(r.error).toMatch(/--/); // points the user at passthrough
+  });
+  it("--resume still allows claude passthrough after --", () => {
+    expect(parseArgs(["--resume", "--", "--model", "opus"])).toMatchObject({
+      command: "interactive",
+      adopt: true,
+      passthrough: ["--model", "opus"],
+    });
+  });
   it("interactive posture flags", () => {
     expect(parseArgs(["--safe"]).posture).toBe("safe");
     expect(parseArgs(["--normal"]).posture).toBe("normal");

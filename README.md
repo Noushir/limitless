@@ -73,7 +73,13 @@ Terminal content is never erased (Claude renders inline, not in the alternate sc
 ```bash
 limitless resume                   # adopt the latest session in the cwd (claude --continue)
 limitless resume <session-id>      # resume a specific session by id (claude --resume <id>)
+limitless --continue               # flag alias for `resume`
+limitless --resume [session-id]    # flag alias for `resume` (optionally a specific id)
 ```
+
+The dashed forms (`--resume` / `--continue`) are accepted as aliases because that's what
+`claude` itself uses. An unrecognized flag before `--` (e.g. `limitless --model opus`) exits
+with an error pointing you at `-- <claude args>` — it is never silently ignored.
 
 For when you started with bare `claude` and got stuck: limitless adopts the latest session
 in the current directory (`claude --continue`) and will continue it at the next reset,

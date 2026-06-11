@@ -13,6 +13,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   core reset-and-continue path is confirmed working against a real limit.
 - Windows support (spawn resolution for `claude.cmd`, Windows CI).
 
+## [0.1.3] - 2026-06-11
+
+### Fixed
+
+- **`limitless --resume` / `--continue` now work.** The dashed flag forms (which
+  people reach for because `claude` itself uses them) were silently ignored and
+  launched a *fresh* session instead of adopting the latest one. They are now
+  accepted as aliases for the `resume` subcommand — `--resume <id>` resumes a
+  specific session, and both compose with posture flags and `-- <claude args>`.
+- **Unknown flags fail loudly instead of vanishing.** An unrecognized option
+  before `--` (e.g. `limitless --model opus`) now exits with a message pointing
+  you at `-- <claude args>`, rather than being silently dropped. Unknown flags are
+  never auto-forwarded to `claude` — that would slip past the posture-escalation
+  guard, which only inspects args after `--`.
+
 ## [0.1.2] - 2026-06-11
 
 Makes carrying a session across a limit genuinely hands-free, and gives
@@ -108,7 +123,8 @@ First public release. Command: `limitless`.
 - `status` and `config` commands; `--version` / `--help`.
 - Config at `~/.limitless/config.json`; run state at `~/.limitless/runs/`.
 
-[Unreleased]: https://github.com/Noushir/limitless/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/Noushir/limitless/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/Noushir/limitless/releases/tag/v0.1.3
 [0.1.2]: https://github.com/Noushir/limitless/releases/tag/v0.1.2
 [0.1.1]: https://github.com/Noushir/limitless/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Noushir/limitless/releases/tag/v0.1.0

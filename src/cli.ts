@@ -25,7 +25,8 @@ const HELP_TEXT = `limitless — keep your Claude Code session going across usag
 
 Usage:
   limitless                          Launch Claude (interactive), wrapped by limitless
-  limitless resume                   Adopt & continue the latest session in this dir
+  limitless resume [id]              Adopt & continue the latest (or a specific) session
+  limitless --resume [id] | --continue   Same as 'resume' (flag aliases)
   limitless --safe | --auto | --normal   Interactive permission posture (default: safe)
   limitless -- <claude args>         Pass extra args through to claude
   limitless headless "<task>"        Unattended task runner
@@ -45,13 +46,19 @@ export interface HeadlessIntent {
 }
 
 export interface ParsedArgs {
-  command: "interactive" | "headless" | "status" | "config" | "help" | "version";
+  command: "interactive" | "headless" | "status" | "config" | "help" | "version" | "error";
   adopt?: boolean;
   resumeId?: string;
   posture?: InteractivePermission;
   passthrough?: string[];
   headless?: HeadlessIntent;
+  error?: string; // set when command === "error"
 }
+
+// limitless's own interactive flags. Anything else before `--` is rejected rather than
+// silently dropped (and is never auto-forwarded to claude — that would sneak past the
+// posture-escalation guard, which only inspects args after `--`).
+const INTERACTIVE_FLAGS = new Set(["--safe", "--normal", "--auto", "--resume", "--continue", "--help", "-h", "--version", "-v"]);
 
 function parseHeadless(argv: string[]): HeadlessIntent {
   const postureOverride = argv.includes("--yolo") ? "yolo" : argv.includes("--safe") ? "safe" : undefined;
@@ -70,11 +77,23 @@ export function parseArgs(argv: string[]): ParsedArgs {
   if (argv[0] === "config") return { command: "config" };
   if (argv[0] === "headless") return { command: "headless", headless: parseHeadless(argv.slice(1)) };
 
-  const adopt = argv[0] === "resume";
-  const rest = adopt ? argv.slice(1) : argv;
-  const dashDash = rest.indexOf("--");
-  const passthrough = dashDash !== -1 ? rest.slice(dashDash + 1) : undefined;
-  const flags = dashDash !== -1 ? rest.slice(0, dashDash) : rest;
+  // Interactive (default). `resume` (subcommand) and the `--resume` / `--continue` flag
+  // aliases all mean "adopt & continue an existing session" — people reach for the dashed
+  // forms because `claude` itself uses them, so treating those as a fresh launch is a trap.
+  const dashDash = argv.indexOf("--");
+  const passthrough = dashDash !== -1 ? argv.slice(dashDash + 1) : undefined;
+  const pre = dashDash !== -1 ? argv.slice(0, dashDash) : argv;
+  const flags = pre[0] === "resume" ? pre.slice(1) : pre;
+
+  const unknown = flags.find((a) => a.startsWith("-") && !INTERACTIVE_FLAGS.has(a));
+  if (unknown) {
+    return {
+      command: "error",
+      error: `unknown option '${unknown}'. limitless flags are --safe|--auto|--normal and --resume [id] / --continue. To pass options to claude, put them after --, e.g.  limitless -- ${unknown} ...`,
+    };
+  }
+
+  const adopt = pre[0] === "resume" || flags.includes("--resume") || flags.includes("--continue");
   const resumeId = adopt ? flags.find((a) => !a.startsWith("-")) : undefined;
   const posture: InteractivePermission | undefined = flags.includes("--safe")
     ? "safe"
@@ -89,6 +108,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
 export async function main(argv: string[]): Promise<void> {
   const parsed = parseArgs(argv);
 
+  if (parsed.command === "error") { process.stderr.write(`limitless: ${parsed.error}\n`); process.exit(2); }
   if (parsed.command === "help") { console.log(HELP_TEXT); return; }
   if (parsed.command === "version") { console.log(readVersion()); return; }
   if (parsed.command === "status") {
