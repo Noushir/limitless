@@ -25,6 +25,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **Persistent terminal title.** limitless sets the window/tab title to
   `∞ limitless — Claude`, so its branding survives Claude repainting the screen on
   resume — when a top-of-screen banner would otherwise scroll out of view.
+- **Clean full-window startup.** The wrap now clears the screen + scrollback before
+  launching Claude — like running `claude` directly — instead of rendering below
+  the previous session's leftover output. Startup-only; the in-place resume/limit
+  flow never clears (preserving your live conversation).
+
+### Changed
+
+- **No compiler needed to install.** `node-pty` now resolves to
+  `@homebridge/node-pty-prebuilt-multiarch` (via an npm alias, so the import is
+  unchanged), which ships **prebuilt binaries** for Linux/macOS/Windows incl.
+  arm64 and musl. Previously a missing prebuilt forced a source build that needed
+  a C++20 toolchain — which failed on older Linux (e.g. Ubuntu 20.04 / GCC 9).
+  Prebuilts cover Node 20–24; Node 25+ still falls back to compiling. The macOS
+  `spawn-helper` chmod now also covers the prebuilt `build/Release/` layout.
 
 ### Fixed
 

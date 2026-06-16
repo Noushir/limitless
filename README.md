@@ -23,8 +23,14 @@ reliability. A headless mode handles unattended task runs.
 
 ## Requirements
 
-- Node >= 20
+- Node 20–24 (prebuilt `node-pty` binaries ship for these; **no compiler needed**)
 - The `claude` CLI installed and authenticated (`claude --version` should work)
+
+limitless depends on `node-pty` (a native pseudo-terminal addon) via
+[`@homebridge/node-pty-prebuilt-multiarch`](https://www.npmjs.com/package/@homebridge/node-pty-prebuilt-multiarch),
+which ships **prebuilt binaries** for Linux/macOS/Windows (incl. arm64 and musl), so a typical
+install needs no C++ toolchain. A compiler is only used as a fallback when no prebuilt matches
+your platform/Node — e.g. Node 25+ or an uncommon architecture — see [Troubleshooting](#troubleshooting).
 
 ---
 
@@ -43,6 +49,33 @@ git clone https://github.com/Noushir/limitless
 cd limitless
 npm install && npm run build && npm link
 ```
+
+### Troubleshooting
+
+**`unrecognized command line option '-std=gnu++20'` / `node-pty` build fails.**
+You only hit this if no prebuilt binary matched your platform/Node and npm fell back to
+compiling from source (e.g. Node 25+, or an uncommon arch) — that path needs a C++20 compiler.
+The error means your `g++` is too old (it only knows `-std=gnu++2a`); `-std=gnu++20` requires
+**GCC ≥ 10**. Either use a Node version with a prebuilt (20–24), or install a newer compiler and
+reinstall:
+
+```bash
+sudo apt-get update && sudo apt-get install -y build-essential g++-10
+CXX=g++-10 CC=gcc-10 npm install -g claude-limitless
+```
+
+If the old compiler is still picked, make 10 the default first:
+
+```bash
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
+```
+
+(Or upgrade the distro — Ubuntu 22.04+ ships GCC 11 by default.)
+
+**`posix_spawnp failed` on macOS.** Handled automatically: the postinstall script marks
+`node-pty`'s `spawn-helper` executable. If you ran with `--ignore-scripts`, re-run
+`npm rebuild node-pty` or reinstall without that flag.
 
 ---
 
