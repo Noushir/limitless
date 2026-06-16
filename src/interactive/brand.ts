@@ -46,6 +46,13 @@ export function terminalTitle(text: string): string {
   return `\x1b]0;${text}\x07`;
 }
 
+// Clear the screen + scrollback and home the cursor, so a wrapped session starts on a clean
+// full window — like launching `claude` directly — instead of rendering below whatever the
+// previous session left on screen. Startup-only: the in-place resume/limit flow never clears.
+export function clearScreen(): string {
+  return "\x1b[2J\x1b[3J\x1b[H";
+}
+
 // A single branded status line written to the user's terminal whenever limitless acts
 // (limit reached, window reopened). Newline-terminated so it sits cleanly in scrollback.
 export function brandStatus(message: string): string {

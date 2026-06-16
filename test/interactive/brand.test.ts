@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { MARK, brandLogo, brandStatus, terminalTitle } from "../../src/interactive/brand.js";
+import { MARK, brandLogo, brandStatus, terminalTitle, clearScreen } from "../../src/interactive/brand.js";
 
 // Visible text only: strip SGR color codes and OSC sequences so we can measure box width.
 const visible = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, "").replace(/\x1b\][^\x07]*\x07/g, "");
@@ -32,6 +32,10 @@ describe("brand", () => {
 
   it("terminalTitle wraps text in an OSC title sequence", () => {
     expect(terminalTitle("∞ limitless — Claude")).toBe("\x1b]0;∞ limitless — Claude\x07");
+  });
+
+  it("clearScreen clears the screen + scrollback and homes the cursor", () => {
+    expect(clearScreen()).toBe("\x1b[2J\x1b[3J\x1b[H");
   });
 
   it("brandStatus formats a single branded, newline-terminated line", () => {

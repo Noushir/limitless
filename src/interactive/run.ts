@@ -8,7 +8,7 @@ import { createLimitDetector } from "./limit-detector.js";
 import { ResumeController } from "./resume-controller.js";
 import { wireSession } from "./session.js";
 import { buildInteractiveArgs, passthroughEscalates } from "./args.js";
-import { brandLogo, terminalTitle } from "./brand.js";
+import { brandLogo, terminalTitle, clearScreen } from "./brand.js";
 import type { InteractivePermission } from "../types.js";
 
 export interface RunInteractiveOptions {
@@ -30,8 +30,10 @@ export function runInteractive(opts: RunInteractiveOptions): void {
     );
     process.exit(2);
   }
-  // Set a persistent ∞ limitless title (survives Claude repainting the screen on resume),
-  // then print the boxed branded banner with a blank line so it frames Claude's own splash.
+  // Start on a clean full window (like launching claude directly) so the previous session's
+  // output isn't left on screen above the wrap. Then set a persistent ∞ limitless title and
+  // print the boxed banner with a trailing blank line so it frames Claude's own splash.
+  process.stderr.write(clearScreen());
   process.stderr.write(terminalTitle("∞ limitless — Claude"));
   process.stderr.write(brandLogo(posture));
 
