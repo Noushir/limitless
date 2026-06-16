@@ -13,7 +13,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   core reset-and-continue path is confirmed working against a real limit.
 - Windows support (spawn resolution for `claude.cmd`, Windows CI).
 
-## [0.1.3] - 2026-06-11
+## [0.1.3] - 2026-06-16
 
 ### Added
 
