@@ -12,6 +12,15 @@ window and continues your same live session in place — presence-aware (auto-co
 you're away, holds for Enter if you're at the keyboard), with a relaunch fallback for
 reliability. A headless mode handles unattended task runs.
 
+**Install globally** — it's a CLI, so the `limitless` command needs to be on your PATH:
+
+```bash
+npm install -g claude-limitless
+```
+
+(The copy button on npm shows `npm i claude-limitless` without `-g`; that only installs it
+into the current folder and won't give you the `limitless` command. Use `-g`.)
+
 > **Early version.** Confirmed against Claude Code v2.1.x's native limit UX (the
 > `You've hit your … limit · resets <time>` banner and the "Stop and wait / Upgrade" chooser),
 > including a real-limit run that waited out the reset and continued the task. On a limit,
@@ -40,15 +49,23 @@ your platform/Node — e.g. Node 25+ or an uncommon architecture — see [Troubl
 npm install -g claude-limitless
 ```
 
-The package is `claude-limitless`; the installed command is **`limitless`**. A postinstall
-script makes `node-pty`'s `spawn-helper` executable (fixes `posix_spawnp failed` on macOS).
-If you install from source:
+The package is `claude-limitless`; the installed command is **`limitless`**. Install it
+**globally** (`-g`) — a plain `npm i claude-limitless` (what the npm page's copy button shows)
+only adds it to the current folder and won't put `limitless` on your PATH. A postinstall script
+makes `node-pty`'s `spawn-helper` executable (fixes `posix_spawnp failed` on macOS).
+
+**From source:**
 
 ```bash
 git clone https://github.com/Noushir/limitless
 cd limitless
 npm install && npm run build && npm link
 ```
+
+> Installing straight from GitHub with `npm i -g github:Noushir/limitless` is **not supported** —
+> the package builds on install (via `prepare`/`tsup`) and that one-shot path fails with
+> `tsup: not found`. Use the clone steps above, or install the published package with
+> `npm install -g claude-limitless`.
 
 ### Troubleshooting
 
